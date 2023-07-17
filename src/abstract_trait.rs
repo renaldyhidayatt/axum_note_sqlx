@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use mockall::automock;
 use sqlx::Error;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -8,6 +9,7 @@ use crate::{models::NoteModel, response::NoteResponse};
 pub type DynNoteRepository = Arc<dyn NoteRepositoryTrait + Send + Sync>;
 pub type DynNoteService = Arc<dyn NoteServiceTrait + Send + Sync>;
 
+#[automock]
 #[async_trait]
 pub trait NoteRepositoryTrait {
     async fn get_notes(&self) -> Result<Vec<NoteModel>, Error>;
@@ -22,6 +24,7 @@ pub trait NoteRepositoryTrait {
     async fn delete(&self, id: Uuid) -> Result<(), Error>;
 }
 
+#[automock]
 #[async_trait]
 pub trait NoteServiceTrait {
     async fn get_notes(&self) -> anyhow::Result<Vec<NoteResponse>>;

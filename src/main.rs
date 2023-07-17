@@ -4,6 +4,7 @@ use config::Config;
 use connection_pool::ConnectionManager;
 use dotenv::dotenv;
 use service_register::ServiceRegister;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::router::AppRouter;
 
@@ -28,6 +29,8 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::init();
 
+    init_tracing();
+
     let pg_pool = ConnectionManager::new_pool(&config.database_url, config.run_migrations)
         .await
         .expect("could not initialize the database connection pool");
@@ -42,4 +45,20 @@ async fn main() -> anyhow::Result<()> {
         .context("could not initialize application routes")?;
 
     Ok(())
+}
+
+fn init_tracing() {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("tower_http=debug,axum_note=debug").unwrap_or_else(|_| {
+                if cfg!(test) {
+                    "tower_http=error"
+                } else {
+                    "axum_note=debug,tower_http=debug"
+                }
+                .into()
+            }),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 }
